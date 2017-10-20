@@ -78,6 +78,8 @@ public class HttpServerTest {
         /* Controlamos el contexto que hará peticiones REST a nuestro servicio */
         server.createContext("/pruebas/", he -> {
             try {
+                /* Agregamos un mínimo de información de depuración */
+                System.out.println(he.getRequestMethod() + " \"" + he.getRequestURI().getPath() + "\"");
                 /* Obtenemos el método usado (en mayúsculas, por si se recibe de otra forma) para saber qué hacer */
                 switch (he.getRequestMethod().toUpperCase()) {
                     case "GET":
