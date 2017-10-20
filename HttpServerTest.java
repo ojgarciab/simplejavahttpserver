@@ -4,9 +4,38 @@ import java.net.*;
 import java.nio.charset.*;
 import java.nio.file.*;
 import java.util.*;
+import com.google.gson.*;
+
+/*
+Descargar la última versión GSON (probada la versión 2.8.2) desde:
+  https://repo1.maven.org/maven2/com/google/code/gson/gson/
+
+Compilar:
+  javac -cp gson-2.8.2.jar:. HttpServerTest.java
+
+Ejecutar:
+  java -cp gson-2.8.2.jar:. HttpServerTest
+*/
 
 public class HttpServerTest {
+    /* Clase privada necesaria para generar un mensaje de respuesta en JSON */
+    private class RespuestaMensaje {
+        private String mensaje;
+        private boolean error = false;
+
+        public RespuestaMensaje(String mensaje, boolean error) {
+            this.mensaje = mensaje;
+            this.error = error;
+        }
+    }
+
+    /* Instanciamos esta clase y la ejecutamos */
     public static void main(final String... args) throws IOException {
+       HttpServerTest http = new HttpServerTest();
+       http.ejecutame();
+    }
+
+    public void ejecutame() throws IOException {
         final HttpServer server = HttpServer.create(new InetSocketAddress("0.0.0.0", 8080), 10);
         /* Controlamos el contexto general para descargar archivos estáticos en la ruta actual */
         server.createContext("/", he -> {
@@ -52,9 +81,14 @@ public class HttpServerTest {
                 /* Obtenemos el método usado (en mayúsculas, por si se recibe de otra forma) para saber qué hacer */
                 switch (he.getRequestMethod().toUpperCase()) {
                     case "GET":
-                        /* Devolvemos un JSON (mal escapado, ojo) con el valor de la URL sobrante */
-                        final String responseBody = "['solicitado','" + he.getRequestURI().getPath().substring(he.getHttpContext().getPath().length()).replace("'", "\\'") + "']";
+                        /* Creamos una instancia de Respuesta para ser convertida en JSON */
+                        RespuestaMensaje respuesta = new RespuestaMensaje(he.getRequestURI().getPath().substring(he.getHttpContext().getPath().length()), false);
+                        /* Creamos un JSON usando GSON */
+                        Gson gson = new Gson();
+                        final String responseBody = gson.toJson(respuesta);
+                        /* Enviamos la cabecera HTTP para indicar que la respuesta serán datos JSON */
                         he.getResponseHeaders().set("Content-Type", String.format("application/json; charset=%s", StandardCharsets.UTF_8));
+                        /* Convertimos la cadena JSON en una matriz de bytes para ser entregados al navegador */
                         final byte[] rawResponseBody = responseBody.getBytes(StandardCharsets.UTF_8);
                         he.sendResponseHeaders(HttpURLConnection.HTTP_OK, rawResponseBody.length);
                         he.getResponseBody().write(rawResponseBody);
