@@ -29,6 +29,15 @@ public class HttpServerTest {
         }
     }
 
+    /* Clase privada necesaria para obtener una consulta en JSON */
+    private class ConsultaMensaje {
+        private String mensaje;
+
+        public String getMensaje() {
+            return mensaje;
+        }
+    }
+
     /* Instanciamos esta clase y la ejecutamos */
     public static void main(final String... args) throws IOException {
        HttpServerTest http = new HttpServerTest();
@@ -75,28 +84,47 @@ public class HttpServerTest {
                 he.close();
             }
         });
-        /* Controlamos el contexto que hará peticiones REST a nuestro servicio */
-        server.createContext("/pruebas/", he -> {
+        /* Controlamos el contexto que hará peticiones REST/JSON a nuestro servicio */
+        server.createContext("/json/", he -> {
             try {
+                /* Definimos las variables de uso común */
+                Gson gson = new Gson();
+                final String responseBody;
+                final byte[] rawResponseBody;
+                RespuestaMensaje respuesta;
                 /* Agregamos un mínimo de información de depuración */
                 System.out.println(he.getRequestMethod() + " \"" + he.getRequestURI().getPath() + "\"");
                 /* Obtenemos el método usado (en mayúsculas, por si se recibe de otra forma) para saber qué hacer */
                 switch (he.getRequestMethod().toUpperCase()) {
                     case "GET":
                         /* Creamos una instancia de Respuesta para ser convertida en JSON */
-                        RespuestaMensaje respuesta = new RespuestaMensaje(he.getRequestURI().getPath().substring(he.getHttpContext().getPath().length()), false);
+                        respuesta = new RespuestaMensaje(he.getRequestURI().getPath().substring(he.getHttpContext().getPath().length()), false);
                         /* Creamos un JSON usando GSON */
-                        Gson gson = new Gson();
-                        final String responseBody = gson.toJson(respuesta);
+                        responseBody = gson.toJson(respuesta);
                         /* Enviamos la cabecera HTTP para indicar que la respuesta serán datos JSON */
                         he.getResponseHeaders().set("Content-Type", String.format("application/json; charset=%s", StandardCharsets.UTF_8));
                         /* Convertimos la cadena JSON en una matriz de bytes para ser entregados al navegador */
-                        final byte[] rawResponseBody = responseBody.getBytes(StandardCharsets.UTF_8);
+                        rawResponseBody = responseBody.getBytes(StandardCharsets.UTF_8);
                         he.sendResponseHeaders(HttpURLConnection.HTTP_OK, rawResponseBody.length);
                         he.getResponseBody().write(rawResponseBody);
                         break;
                     case "POST":
-                        he.sendResponseHeaders(HttpURLConnection.HTTP_OK, -1);
+                        /* Obtenemos el mensaje enviado mediante POST */
+                        java.util.Scanner s = new java.util.Scanner(he.getRequestBody(), StandardCharsets.UTF_8.toString()).useDelimiter("\\A");
+                        /* Si no hay ningún problema */
+                        if (s.hasNext()) {
+                            ConsultaMensaje consulta = gson.fromJson(s.next(), ConsultaMensaje.class);
+                            respuesta = new RespuestaMensaje(consulta.getMensaje(), false);
+                        } else {
+                            respuesta = new RespuestaMensaje("Error recibiendo datos", true);
+                        }
+                        responseBody = gson.toJson(respuesta);
+                        /* Enviamos la cabecera HTTP para indicar que la respuesta serán datos JSON */
+                        he.getResponseHeaders().set("Content-Type", String.format("application/json; charset=%s", StandardCharsets.UTF_8));
+                        /* Convertimos la cadena JSON en una matriz de bytes para ser entregados al navegador */
+                        rawResponseBody = responseBody.getBytes(StandardCharsets.UTF_8);
+                        he.sendResponseHeaders(HttpURLConnection.HTTP_OK, rawResponseBody.length);
+                        he.getResponseBody().write(rawResponseBody);
                         break;
                     case "DELETE":
                         he.sendResponseHeaders(HttpURLConnection.HTTP_OK, -1);
@@ -111,6 +139,63 @@ public class HttpServerTest {
                         he.sendResponseHeaders(HttpURLConnection.HTTP_BAD_METHOD, -1);
                         break;
                 }
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            } finally {
+                he.close();
+            }
+        });
+        /* Controlamos el contexto que hará peticiones en texto a nuestro servicio */
+        server.createContext("/texto/", he -> {
+            try {
+                /* Definimos las variables de uso común */
+                final String responseBody;
+                final byte[] rawResponseBody;
+                /* Agregamos un mínimo de información de depuración */
+                System.out.println(he.getRequestMethod() + " \"" + he.getRequestURI().getPath() + "\"");
+                /* Obtenemos el método usado (en mayúsculas, por si se recibe de otra forma) para saber qué hacer */
+                switch (he.getRequestMethod().toUpperCase()) {
+                    case "GET":
+                        /* Obtenemos la URL restante */
+                        responseBody = he.getRequestURI().getPath().substring(he.getHttpContext().getPath().length());
+                        /* Enviamos la cabecera HTTP para indicar que la respuesta serán datos en texto plano */
+                        he.getResponseHeaders().set("Content-Type", String.format("text/plain; charset=%s", StandardCharsets.UTF_8));
+                        /* Convertimos la cadena de texto en una matriz de bytes para ser entregados al navegador */
+                        rawResponseBody = responseBody.getBytes(StandardCharsets.UTF_8);
+                        he.sendResponseHeaders(HttpURLConnection.HTTP_OK, rawResponseBody.length);
+                        he.getResponseBody().write(rawResponseBody);
+                        break;
+                    case "POST":
+                        /* Obtenemos el mensaje enviado mediante POST */
+                        java.util.Scanner s = new java.util.Scanner(he.getRequestBody(), StandardCharsets.UTF_8.toString()).useDelimiter("\\A");
+                        /* Si no hay ningún problema */
+                        if (s.hasNext()) {
+                            responseBody = s.next();
+                        } else {
+                            responseBody = "Error recibiendo datos";
+                        }
+                        /* Enviamos la cabecera HTTP para indicar que la respuesta serán datos en texto plano */
+                        he.getResponseHeaders().set("Content-Type", String.format("text/plain; charset=%s", StandardCharsets.UTF_8));
+                        /* Convertimos la cadena en una matriz de bytes para ser entregados al navegador */
+                        rawResponseBody = responseBody.getBytes(StandardCharsets.UTF_8);
+                        he.sendResponseHeaders(HttpURLConnection.HTTP_OK, rawResponseBody.length);
+                        he.getResponseBody().write(rawResponseBody);
+                        break;
+                    case "DELETE":
+                        he.sendResponseHeaders(HttpURLConnection.HTTP_OK, -1);
+                        break;
+                    case "OPTIONS":
+                        he.getResponseHeaders().set("Allow", "GET,POST,DELETE,OPTIONS");
+                        he.sendResponseHeaders(HttpURLConnection.HTTP_OK, -1);
+                        break;
+                    default:
+                        /* Si no se selecciona un método correcto devolvemos un BAD METHOD */
+                        he.getResponseHeaders().set("Allow", "GET,POST,DELETE,OPTIONS");
+                        he.sendResponseHeaders(HttpURLConnection.HTTP_BAD_METHOD, -1);
+                        break;
+                }
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
             } finally {
                 he.close();
             }

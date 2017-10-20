@@ -12,25 +12,72 @@
 <body style="padding-top: 2rem;">
     <div class="container">
         <h1>Título</h1>
-        <p class="lead">Plantilla de ejemplo con Bootstrap y jQuery.</p>
+        <p class="lead">Ejemplo de envío de datos a Java</p>
 
-        <p>Introduzca su nombre: <input type="text" id="nombre" /> <button onclick="return enviar();" >Enviar</button></p>
+        <p>
+          Introduzca su nombre: <input type="text" id="nombre" placeholder="Escriba su nombre aquí" />
+          <button onclick="return enviar_url();" >URL/JSON</button>
+          <button onclick="return enviar_post();" >POST/JSON</button>
+          <button onclick="return enviar_plano_url();" >URL/texto</button>
+          <button onclick="return enviar_plano_post();" >POST/texto</button>
+        </p>
 
      </div>
 
     <script>
       var nombre = document.getElementById('nombre');
-      function enviar() {
+      function enviar_url() {
         $.ajax({
-          url: '/pruebas/' + encodeURI(nombre.value),
+          url: '/json/' + encodeURI(nombre.value),
           dataType: 'json',
           method: 'get',
-        }).done(function(datos) {
-          /* Si todo ha ido bien mostramos una alerta con el contenido */
-          if (typeof datos.error !== 'undefined' && datos.error === false) {
-            alert("Mensaje recibido: " + datos.mensaje);
-          } else {
-            alert("Error en la consulta");
+          success: function(datos) {
+            /* Si todo ha ido bien mostramos una alerta con el contenido */
+            if (typeof datos.error !== 'undefined' && datos.error === false) {
+              alert("Mensaje recibido: " + datos.mensaje);
+            } else {
+              alert("Error en la consulta");
+            }
+          }
+        });
+      }
+      function enviar_post() {
+        $.ajax({
+          url: '/json/',
+          dataType: 'json',
+          method: 'post',
+          data: JSON.stringify({
+            mensaje: nombre.value,
+          }),
+          contentType: 'application/json; charset=utf-8',
+          success: function(datos) {
+            /* Si todo ha ido bien mostramos una alerta con el contenido */
+            if (typeof datos.error !== 'undefined' && datos.error === false) {
+              alert("Mensaje recibido: " + datos.mensaje);
+            } else {
+              alert("Error en la consulta");
+            }
+          }
+        });
+      }
+      function enviar_plano_url() {
+        $.ajax({
+          url: '/texto/' + encodeURI(nombre.value),
+          dataType: 'text',
+          method: 'get',
+          success: function(datos) {
+            alert("Mensaje recibido: " + datos);
+          }
+        });
+      }
+      function enviar_plano_post() {
+        $.ajax({
+          url: '/texto/',
+          dataType: 'text',
+          method: 'post',
+          data: nombre.value,
+          success: function(datos) {
+            alert("Mensaje recibido: " + datos);
           }
         });
       }
