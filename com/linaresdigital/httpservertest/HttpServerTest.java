@@ -1,3 +1,5 @@
+package com.linaresdigital.httpservertest;
+
 import com.sun.net.httpserver.*;
 import java.io.*;
 import java.net.*;
@@ -11,10 +13,10 @@ Descargar la última versión GSON (probada la versión 2.8.2) desde:
   https://repo1.maven.org/maven2/com/google/code/gson/gson/
 
 Compilar:
-  javac -cp gson-2.8.2.jar:. HttpServerTest.java
+  javac -cp gson-2.8.2.jar:. com/linaresdigital/httpservertest/HttpServerTest.java
 
 Ejecutar:
-  java -cp gson-2.8.2.jar:. HttpServerTest
+  java -cp gson-2.8.2.jar:. com.linaresdigital.httpservertest.HttpServerTest
 */
 
 public class HttpServerTest {
