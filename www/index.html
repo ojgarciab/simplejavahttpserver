@@ -18,6 +18,7 @@
           Introduzca su nombre: <input type="text" id="nombre" placeholder="Escriba su nombre aquí" />
           <button onclick="return enviar_url();" >URL/JSON</button>
           <button onclick="return enviar_post();" >POST/JSON</button>
+          <button onclick="return enviar_delete();" >DELETE/JSON</button>
           <button onclick="return enviar_plano_url();" >URL/texto</button>
           <button onclick="return enviar_plano_post();" >POST/texto</button>
         </p>
@@ -54,6 +55,22 @@
             /* Si todo ha ido bien mostramos una alerta con el contenido */
             if (typeof datos.error !== 'undefined' && datos.error === false) {
               alert("Mensaje recibido: " + datos.mensaje);
+            } else {
+              alert("Error en la consulta");
+            }
+          }
+        });
+      }
+      function enviar_delete() {
+        $.ajax({
+          url: '/json/' + encodeURI(nombre.value),
+          dataType: 'json',
+          method: 'delete',
+          contentType: 'application/json; charset=utf-8',
+          success: function(datos) {
+            /* Si todo ha ido bien mostramos una alerta con el contenido */
+            if (typeof datos.error !== 'undefined' && datos.error === false) {
+              alert("Mensaje recibido: " + datos.mensajes.join(', '));
             } else {
               alert("Error en la consulta");
             }

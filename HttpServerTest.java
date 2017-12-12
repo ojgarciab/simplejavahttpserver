@@ -29,6 +29,20 @@ public class HttpServerTest {
         }
     }
 
+    private class RespuestaMatriz {
+        private List<String> mensajes;
+        private boolean error = false;
+
+        public RespuestaMatriz(String mensaje, boolean error) {
+            this.mensajes = new ArrayList<String>();
+            mensajes.add(mensaje);
+            mensajes.add("Primero");
+            mensajes.add("Segundo");
+            mensajes.add("Tercero");
+            this.error = error;
+        }
+    }
+
     /* Clase privada necesaria para obtener una consulta en JSON */
     private class ConsultaMensaje {
         private String mensaje;
@@ -92,6 +106,7 @@ public class HttpServerTest {
                 final String responseBody;
                 final byte[] rawResponseBody;
                 RespuestaMensaje respuesta;
+                RespuestaMatriz respuesta2;
                 /* Agregamos un mínimo de información de depuración */
                 System.out.println(he.getRequestMethod() + " \"" + he.getRequestURI().getPath() + "\"");
                 /* Obtenemos el método usado (en mayúsculas, por si se recibe de otra forma) para saber qué hacer */
@@ -127,7 +142,16 @@ public class HttpServerTest {
                         he.getResponseBody().write(rawResponseBody);
                         break;
                     case "DELETE":
-                        he.sendResponseHeaders(HttpURLConnection.HTTP_OK, -1);
+                    /* Creamos una instancia de Respuesta para ser convertida en JSON */
+                    respuesta2 = new RespuestaMatriz(he.getRequestURI().getPath().substring(he.getHttpContext().getPath().length()), false);
+                    /* Creamos un JSON usando GSON */
+                    responseBody = gson.toJson(respuesta2);
+                    /* Enviamos la cabecera HTTP para indicar que la respuesta serán datos JSON */
+                    he.getResponseHeaders().set("Content-Type", String.format("application/json; charset=%s", StandardCharsets.UTF_8));
+                    /* Convertimos la cadena JSON en una matriz de bytes para ser entregados al navegador */
+                    rawResponseBody = responseBody.getBytes(StandardCharsets.UTF_8);
+                    he.sendResponseHeaders(HttpURLConnection.HTTP_OK, rawResponseBody.length);
+                    he.getResponseBody().write(rawResponseBody);
                         break;
                     case "OPTIONS":
                         he.getResponseHeaders().set("Allow", "GET,POST,DELETE,OPTIONS");
