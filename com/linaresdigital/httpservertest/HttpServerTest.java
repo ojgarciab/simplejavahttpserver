@@ -60,10 +60,8 @@ public class HttpServerTest {
        http.ejecutame();
     }
 
-    public void ejecutame() throws IOException {
-        final HttpServer server = HttpServer.create(new InetSocketAddress("0.0.0.0", 8080), 10);
-        /* Controlamos el contexto general para descargar archivos estáticos en la ruta actual */
-        server.createContext("/", he -> {
+    class raiz implements HttpHandler {
+        public void handle(HttpExchange he) throws IOException {
             try {
                 /* Comprobamos la existencia del archivo a partir de la ruta www del directorio actual ("./www") */
                 File file = new File("./www", he.getRequestURI().getPath());
@@ -99,9 +97,11 @@ public class HttpServerTest {
             } finally {
                 he.close();
             }
-        });
-        /* Controlamos el contexto que hará peticiones REST/JSON a nuestro servicio */
-        server.createContext("/json/", he -> {
+        }
+    }
+
+    class json implements HttpHandler {
+        public void handle(HttpExchange he) throws IOException {
             try {
                 /* Definimos las variables de uso común */
                 Gson gson = new Gson();
@@ -170,9 +170,11 @@ public class HttpServerTest {
             } finally {
                 he.close();
             }
-        });
-        /* Controlamos el contexto que hará peticiones en texto a nuestro servicio */
-        server.createContext("/texto/", he -> {
+        }
+    }
+
+    class texto implements HttpHandler {
+        public void handle(HttpExchange he) throws IOException {
             try {
                 /* Definimos las variables de uso común */
                 final String responseBody;
@@ -225,7 +227,17 @@ public class HttpServerTest {
             } finally {
                 he.close();
             }
-        });
+        }
+    }
+
+    public void ejecutame() throws IOException {
+        final HttpServer server = HttpServer.create(new InetSocketAddress("0.0.0.0", 8080), 10);
+        /* Controlamos el contexto general para descargar archivos estáticos en la ruta actual */
+        server.createContext("/", new raiz());
+        /* Controlamos el contexto que hará peticiones REST/JSON a nuestro servicio */
+        server.createContext("/json/", new json());
+        /* Controlamos el contexto que hará peticiones en texto a nuestro servicio */
+        server.createContext("/texto/", new texto());
         /* Efectuamos el arranque del servidor, quedando la ejecución bloqueada a partir de aquí */
         server.start();
     }
