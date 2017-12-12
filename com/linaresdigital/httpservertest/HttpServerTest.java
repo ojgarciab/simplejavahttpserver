@@ -193,7 +193,7 @@ public class HttpServerTest {
                         break;
                     case "POST":
                         /* Obtenemos el mensaje enviado mediante POST */
-                        java.util.Scanner s = new java.util.Scanner(he.getRequestBody(), StandardCharsets.UTF_8.toString()).useDelimiter("\\A");
+                        Scanner s = new Scanner(he.getRequestBody(), StandardCharsets.UTF_8.toString()).useDelimiter("\\A");
                         /* Si no hay ningún problema */
                         if (s.hasNext()) {
                             responseBody = s.next();
