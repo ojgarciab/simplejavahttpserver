@@ -1,7 +1,6 @@
 language: java
 jdk:
   - oraclejdk8
-  - openjdk8
 install:
   - curl 'https://repo1.maven.org/maven2/com/google/code/gson/gson/2.8.2/gson-2.8.2.jar' > 'gson-2.8.2.jar'
   - javac -cp gson-2.8.2.jar:. com/linaresdigital/httpservertest/HttpServerTest.java
