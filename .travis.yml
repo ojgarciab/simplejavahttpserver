@@ -9,3 +9,4 @@ script:
   - java -cp gson-2.8.2.jar:. com.linaresdigital.httpservertest.HttpServerTest & sleep 2
   - "curl 'http://localhost:8080/' | tee /dev/fd/2 | grep -q 'Aplicación de ejemplo'"
   - "curl 'http://localhost:8080/mal' | tee /dev/fd/2 | grep -q 'Error 404'"
+  - kill %1
