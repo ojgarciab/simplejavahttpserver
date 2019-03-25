@@ -2,8 +2,10 @@ language: java
 jdk:
   - oraclejdk8
   - openjdk8
+install:
+  - curl 'https://repo1.maven.org/maven2/com/google/code/gson/gson/2.8.2/gson-2.8.2.jar' > 'gson-2.8.2.jar'
 script:
   - javac -cp gson-2.8.2.jar:. com/linaresdigital/httpservertest/HttpServerTest.java
   - java -cp gson-2.8.2.jar:. com.linaresdigital.httpservertest.HttpServerTest &
-  - "curl 'http://localhost:8080/' | tee /dev/fd/2 | grep -q 'Bienvenido a Programa Sonido Ambiental'"
+  - "curl 'http://localhost:8080/' | tee /dev/fd/2 | grep -q 'Aplicación de ejemplo'"
   - "curl 'http://localhost:8080/mal' | tee /dev/fd/2 | grep -q 'Error 404'"
